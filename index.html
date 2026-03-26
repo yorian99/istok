@@ -10,6 +10,7 @@
     body { background-color: #f8f9fa; }
     .card { border-radius: 10px; }
     .table img { max-width: 50px; max-height: 50px; object-fit: cover; }
+    .cart-item-qty { width: 70px; }
   </style>
 </head>
 <body>
@@ -23,11 +24,11 @@
         <div class="card-body">
           <div class="mb-3">
             <label for="username" class="form-label">Username</label>
-            <input type="text" id="username" class="form-control" placeholder="Masukkan username">
+            <input type="text" id="username" class="form-control" placeholder="admin">
           </div>
           <div class="mb-3">
             <label for="password" class="form-label">Password</label>
-            <input type="password" id="password" class="form-control" placeholder="Masukkan password">
+            <input type="password" id="password" class="form-control" placeholder="admin123">
           </div>
           <button class="btn btn-primary w-100" id="btn-login">Login</button>
           <div id="login-error" class="text-danger mt-2 text-center"></div>
@@ -55,33 +56,42 @@
           </div>
         </div>
       </nav>
-      <div class="container mt-4" id="page-content"></div>
+
+      <div class="container mt-4" id="page-content">
+        <!-- Konten dinamis -->
+      </div>
     </div>
   </div>
 
-  <!-- Modal Produk -->
-  <div class="modal fade" id="productModal" tabindex="-1">
+  <!-- Modal untuk produk -->
+  <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Tambah/Edit Produk</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <h5 class="modal-title" id="productModalLabel">Tambah/Edit Produk</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
           <form id="productForm">
             <input type="hidden" id="productId">
-            <div class="mb-3"><label>SKU</label><input type="text" id="sku" class="form-control" required></div>
-            <div class="mb-3"><label>Nama Produk</label><input type="text" id="name" class="form-control" required></div>
+            <div class="mb-3"><label for="sku" class="form-label">SKU</label><input type="text" class="form-control" id="sku" required></div>
+            <div class="mb-3"><label for="name" class="form-label">Nama Produk</label><input type="text" class="form-control" id="name" required></div>
+            <div class="mb-3"><label for="category_id" class="form-label">Kategori ID</label><input type="number" class="form-control" id="category_id" value="1"></div>
+            <div class="mb-3"><label for="supplier_id" class="form-label">Supplier ID</label><input type="number" class="form-control" id="supplier_id" value="1"></div>
             <div class="row">
-              <div class="col-md-6"><label>Harga Beli</label><input type="number" id="price_buy" class="form-control" required></div>
-              <div class="col-md-6"><label>Harga Jual</label><input type="number" id="price_sell" class="form-control" required></div>
+              <div class="col-md-6 mb-3"><label for="price_buy" class="form-label">Harga Beli</label><input type="number" class="form-control" id="price_buy" required></div>
+              <div class="col-md-6 mb-3"><label for="price_sell" class="form-label">Harga Jual</label><input type="number" class="form-control" id="price_sell" required></div>
             </div>
             <div class="row">
-              <div class="col-md-6"><label>Stok</label><input type="number" id="stock" class="form-control" required></div>
-              <div class="col-md-6"><label>Satuan</label><input type="text" id="unit" class="form-control" value="pcs"></div>
+              <div class="col-md-6 mb-3"><label for="stock" class="form-label">Stok</label><input type="number" class="form-control" id="stock" required></div>
+              <div class="col-md-6 mb-3"><label for="unit" class="form-label">Satuan</label><input type="text" class="form-control" id="unit" value="pcs"></div>
             </div>
-            <div class="mb-3"><label>Foto</label><input type="file" id="photo" class="form-control" accept="image/*"></div>
-            <div id="currentPhoto"></div>
+            <div class="mb-3">
+              <label for="photo" class="form-label">Foto Produk</label>
+              <input type="file" class="form-control" id="photo" accept="image/*">
+              <div id="currentPhoto" class="mt-2"></div>
+              <small class="text-muted">Kosongkan jika tidak ingin mengganti foto.</small>
+            </div>
           </form>
         </div>
         <div class="modal-footer">
@@ -98,33 +108,53 @@
   <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-    const API_BASE = 'https://script.google.com/macros/s/AKfycbySgCDmrWal_vWNoH89tMVLLWSSF7M6ISZ67gMOZFj34WQUsJq5KhfqanZ6RXXhPSQd/exec';
-    let authToken = null;
-    let currentUser = null;
+    // ========== KONFIGURASI ==========
+    // GANTI DENGAN URL WEB APP ANDA
+    const API_BASE = 'https://script.google.com/macros/s/AKfycbx.../exec'; // <-- GANTI INI
 
+    let currentUser = null;
+    let authToken = null;
+
+    // ========== UTILITY API ==========
     async function apiRequest(path, method = 'GET', data = null) {
       const url = new URL(API_BASE);
       url.searchParams.append('path', path);
       if (authToken) url.searchParams.append('token', authToken);
+      
       const options = { method };
       if (data) {
         options.method = 'POST';
         options.body = JSON.stringify(data);
+        options.headers = { 'Content-Type': 'application/json' };
       }
+      
       try {
-        const res = await fetch(url, options);
-        return await res.json();
-      } catch (e) {
-        console.error(e);
-        return { success: false, message: 'Koneksi gagal' };
+        const response = await fetch(url, options);
+        const result = await response.json();
+        return result;
+      } catch (error) {
+        console.error('API Error:', error);
+        return { success: false, message: 'Koneksi gagal: ' + error.message };
       }
     }
 
+    // ========== LOGIN ==========
     document.getElementById('btn-login').addEventListener('click', async () => {
-      const username = document.getElementById('username').value;
+      const username = document.getElementById('username').value.trim();
       const password = document.getElementById('password').value;
+      const errorDiv = document.getElementById('login-error');
+      errorDiv.innerText = '';
+
+      if (!username || !password) {
+        errorDiv.innerText = 'Username dan password harus diisi';
+        return;
+      }
+
+      console.log('Mencoba login dengan:', username);
       const res = await apiRequest('login', 'POST', { username, password });
-      if (res.success) {
+      console.log('Response login:', res);
+
+      if (res && res.success) {
         authToken = res.token;
         currentUser = res.user;
         document.getElementById('login-container').style.display = 'none';
@@ -132,21 +162,27 @@
         document.getElementById('user-info').innerText = `${currentUser.username} (${currentUser.role})`;
         loadPage('dashboard');
       } else {
-        document.getElementById('login-error').innerText = res.message;
+        errorDiv.innerText = res?.message || 'Login gagal. Periksa username/password atau koneksi.';
       }
     });
 
+    // ========== LOGOUT ==========
     document.getElementById('logout').addEventListener('click', () => {
       authToken = null;
       currentUser = null;
       document.getElementById('login-container').style.display = 'block';
       document.getElementById('main-container').style.display = 'none';
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('login-error').innerText = '';
     });
 
+    // ========== NAVIGASI ==========
     document.querySelectorAll('[data-page]').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
-        loadPage(link.getAttribute('data-page'));
+        const page = link.getAttribute('data-page');
+        loadPage(page);
       });
     });
 
@@ -158,22 +194,46 @@
       else if (page === 'reports') await loadReports(content);
     }
 
+    // ========== DASHBOARD ==========
     async function loadDashboard(container) {
       const data = await apiRequest('dashboard', 'GET');
       container.innerHTML = `
         <div class="row">
-          <div class="col-md-4"><div class="card text-white bg-primary mb-3"><div class="card-body"><h5>Penjualan Hari Ini</h5><p class="fs-3">${formatRupiah(data.totalSalesToday || 0)}</p></div></div></div>
-          <div class="col-md-4"><div class="card text-white bg-warning mb-3"><div class="card-body"><h5>Stok Menipis</h5><p class="fs-3">${data.lowStockCount || 0} produk</p></div></div></div>
+          <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3">
+              <div class="card-body">
+                <h5 class="card-title">Penjualan Hari Ini</h5>
+                <p class="card-text fs-3">${formatRupiah(data.totalSalesToday || 0)}</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card text-white bg-warning mb-3">
+              <div class="card-body">
+                <h5 class="card-title">Stok Menipis</h5>
+                <p class="card-text fs-3">${data.lowStockCount || 0} produk</p>
+              </div>
+            </div>
+          </div>
         </div>
       `;
     }
 
-    let productsData = [], productsTable;
+    // ========== PRODUK ==========
+    let productsData = [];
+    let productsTable = null;
     async function loadProducts(container) {
       const products = await apiRequest('products', 'GET');
       productsData = products;
-      let html = `<div class="d-flex justify-content-between"><h2>Produk</h2><button class="btn btn-success" id="btn-add-product">+ Tambah</button></div>
-        <table id="products-table" class="table"><thead><tr><th>SKU</th><th>Nama</th><th>Harga Beli</th><th>Harga Jual</th><th>Stok</th><th>Foto</th><th>Aksi</th></tr></thead><tbody>`;
+      let html = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2>Manajemen Produk</h2>
+          <button class="btn btn-success" id="btn-add-product">+ Tambah Produk</button>
+        </div>
+        <table id="products-table" class="table table-striped">
+          <thead><tr><th>SKU</th><th>Nama</th><th>Harga Beli</th><th>Harga Jual</th><th>Stok</th><th>Foto</th><th>Aksi</th></tr></thead>
+          <tbody>
+      `;
       products.forEach(p => {
         html += `<tr>
           <td>${escapeHtml(p.sku)}</td>
@@ -182,21 +242,37 @@
           <td>${formatRupiah(p.price_sell)}</td>
           <td>${p.stock}</td>
           <td>${p.photo_url ? `<img src="${p.photo_url}" width="50">` : '-'}</td>
-          <td><button class="btn btn-sm btn-warning edit-product" data-id="${p.id}">Edit</button> <button class="btn btn-sm btn-danger delete-product" data-id="${p.id}">Hapus</button></td>
+          <td>
+            <button class="btn btn-sm btn-warning edit-product" data-id="${p.id}">Edit</button>
+            <button class="btn btn-sm btn-danger delete-product" data-id="${p.id}">Hapus</button>
+          </td>
         </tr>`;
       });
       html += `</tbody></table>`;
       container.innerHTML = html;
+      
       if (productsTable) productsTable.destroy();
       productsTable = $('#products-table').DataTable();
-      document.getElementById('btn-add-product').onclick = () => showProductModal();
-      document.querySelectorAll('.edit-product').forEach(btn => btn.onclick = () => showProductModal(productsData.find(p => p.id == btn.dataset.id)));
-      document.querySelectorAll('.delete-product').forEach(btn => btn.onclick = async () => {
-        if (confirm('Yakin hapus?')) {
-          const res = await apiRequest('products', 'POST', { action: 'delete', id: btn.dataset.id });
-          if (res.success) { alert('Terhapus'); loadProducts(container); }
-          else alert('Gagal');
-        }
+      
+      document.getElementById('btn-add-product').addEventListener('click', () => showProductModal());
+      document.querySelectorAll('.edit-product').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          const product = productsData.find(p => p.id == id);
+          showProductModal(product);
+        });
+      });
+      document.querySelectorAll('.delete-product').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (confirm('Yakin ingin menghapus produk ini?')) {
+            const id = btn.dataset.id;
+            const res = await apiRequest('products', 'POST', { action: 'delete', id });
+            if (res.success) {
+              alert('Produk dihapus');
+              loadProducts(container);
+            } else alert('Gagal hapus');
+          }
+        });
       });
     }
 
@@ -205,11 +281,16 @@
       document.getElementById('productId').value = product ? product.id : '';
       document.getElementById('sku').value = product ? product.sku : '';
       document.getElementById('name').value = product ? product.name : '';
+      document.getElementById('category_id').value = product ? product.category_id : 1;
+      document.getElementById('supplier_id').value = product ? product.supplier_id : 1;
       document.getElementById('price_buy').value = product ? product.price_buy : '';
       document.getElementById('price_sell').value = product ? product.price_sell : '';
       document.getElementById('stock').value = product ? product.stock : '';
       document.getElementById('unit').value = product ? product.unit : 'pcs';
-      document.getElementById('currentPhoto').innerHTML = product && product.photo_url ? `<img src="${product.photo_url}" width="100"><br><small>Foto saat ini</small>` : '';
+      const currentPhotoDiv = document.getElementById('currentPhoto');
+      if (product && product.photo_url) {
+        currentPhotoDiv.innerHTML = `<img src="${product.photo_url}" width="100"><br><small>Foto saat ini</small>`;
+      } else currentPhotoDiv.innerHTML = '';
       document.getElementById('photo').value = '';
       modal.show();
     }
@@ -218,30 +299,38 @@
       const id = document.getElementById('productId').value;
       const sku = document.getElementById('sku').value;
       const name = document.getElementById('name').value;
+      const category_id = parseInt(document.getElementById('category_id').value);
+      const supplier_id = parseInt(document.getElementById('supplier_id').value);
       const price_buy = parseFloat(document.getElementById('price_buy').value);
       const price_sell = parseFloat(document.getElementById('price_sell').value);
       const stock = parseInt(document.getElementById('stock').value);
       const unit = document.getElementById('unit').value;
+      
       let photo_url = null;
       const photoFile = document.getElementById('photo').files[0];
       if (photoFile) {
         const reader = new FileReader();
         reader.onload = async function(e) {
           const base64 = e.target.result.split(',')[1];
-          const uploadRes = await apiRequest('uploadPhoto', 'POST', { fileName: photoFile.name, base64Data: base64, mimeType: photoFile.type });
-          if (uploadRes.success) photo_url = uploadRes.url;
-          else alert('Upload foto gagal');
-          saveProduct(id, sku, name, price_buy, price_sell, stock, unit, photo_url);
+          const uploadRes = await apiRequest('uploadPhoto', 'POST', {
+            fileName: photoFile.name,
+            base64Data: base64,
+            mimeType: photoFile.type
+          });
+          if (uploadRes.success) {
+            photo_url = uploadRes.url;
+            saveProductToBackend(id, sku, name, category_id, supplier_id, price_buy, price_sell, stock, unit, photo_url);
+          } else alert('Gagal upload foto');
         };
         reader.readAsDataURL(photoFile);
       } else {
-        saveProduct(id, sku, name, price_buy, price_sell, stock, unit, null);
+        saveProductToBackend(id, sku, name, category_id, supplier_id, price_buy, price_sell, stock, unit, null);
       }
     });
 
-    async function saveProduct(id, sku, name, price_buy, price_sell, stock, unit, photo_url) {
+    async function saveProductToBackend(id, sku, name, category_id, supplier_id, price_buy, price_sell, stock, unit, photo_url) {
       const action = id ? 'update' : 'add';
-      const payload = { action, sku, name, category_id: 1, supplier_id: 1, price_buy, price_sell, stock, unit };
+      const payload = { action, sku, name, category_id, supplier_id, price_buy, price_sell, stock, unit };
       if (id) payload.id = id;
       if (photo_url) payload.photo_url = photo_url;
       const res = await apiRequest('products', 'POST', payload);
@@ -249,16 +338,17 @@
         alert('Produk tersimpan');
         bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
         loadProducts(document.getElementById('page-content'));
-      } else alert('Gagal simpan');
+      } else alert('Gagal simpan produk');
     }
 
+    // ========== KASIR ==========
     let cart = [];
     async function loadPOS(container) {
       const products = await apiRequest('products', 'GET');
       cart = [];
       function renderCart() {
         let total = 0;
-        let html = `<table class="table"><thead><tr><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th><th></th></tr></thead><tbody>`;
+        let html = '<table class="table table-bordered"><thead><tr><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th><th></th></tr></thead><tbody>';
         cart.forEach((item, idx) => {
           const subtotal = item.qty * item.price_sell;
           total += subtotal;
@@ -270,75 +360,108 @@
             <td><button class="btn btn-sm btn-danger remove-cart" data-idx="${idx}">Hapus</button></td>
           </tr>`;
         });
-        html += `</tbody><tfoot><tr><td colspan="3" class="text-end"><strong>Total:</strong></td><td><strong>${formatRupiah(total)}</strong></td><td></td></tr></tfoot></table>
-          <div class="row"><div class="col-md-6"><label>Nama Pelanggan</label><input type="text" id="customer-name" class="form-control"></div>
-          <div class="col-md-6"><label>Metode Pembayaran</label><select id="payment-method" class="form-select"><option>Cash</option><option>Transfer</option><option>E-Wallet</option></select></div></div>
-          <button id="process-sale" class="btn btn-primary mt-3">Proses Penjualan</button>`;
+        html += `</tbody><tfoot><tr><td colspan="3" class="text-end"><strong>Total:</strong></td><td><strong>${formatRupiah(total)}</strong></td><td></td></tr></tfoot></table>`;
+        html += `<div class="row">
+          <div class="col-md-6"><label>Nama Pelanggan</label><input type="text" id="customer-name" class="form-control" placeholder="Opsional"></div>
+          <div class="col-md-6"><label>Metode Pembayaran</label><select id="payment-method" class="form-select"><option>Cash</option><option>Transfer</option><option>E-Wallet</option></select></div>
+        </div>
+        <div class="mt-3"><button id="process-sale" class="btn btn-primary">Proses Penjualan</button></div>`;
         document.getElementById('cart-container').innerHTML = html;
-        document.querySelectorAll('.cart-qty').forEach(inp => inp.addEventListener('change', (e) => {
-          const idx = inp.dataset.idx;
-          let qty = parseInt(inp.value);
-          if (isNaN(qty) || qty < 1) qty = 1;
-          cart[idx].qty = qty;
-          renderCart();
-        }));
-        document.querySelectorAll('.remove-cart').forEach(btn => btn.addEventListener('click', (e) => {
-          cart.splice(btn.dataset.idx, 1);
-          renderCart();
-        }));
-        document.getElementById('process-sale').onclick = async () => {
+        
+        document.querySelectorAll('.cart-qty').forEach(input => {
+          input.addEventListener('change', (e) => {
+            const idx = input.dataset.idx;
+            let newQty = parseInt(input.value);
+            if (isNaN(newQty) || newQty < 1) newQty = 1;
+            cart[idx].qty = newQty;
+            renderCart();
+          });
+        });
+        document.querySelectorAll('.remove-cart').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const idx = btn.dataset.idx;
+            cart.splice(idx, 1);
+            renderCart();
+          });
+        });
+        document.getElementById('process-sale').addEventListener('click', async () => {
           const customer = document.getElementById('customer-name').value;
           const payment = document.getElementById('payment-method').value;
           const items = cart.map(i => ({ product_id: i.id, qty: i.qty, price: i.price_sell }));
-          const total = cart.reduce((s,i) => s + i.qty * i.price_sell, 0);
+          const total = cart.reduce((sum, i) => sum + (i.qty * i.price_sell), 0);
           const res = await apiRequest('sales', 'POST', { customer_name: customer, payment_method: payment, total, items });
           if (res.success) {
             alert(`Penjualan berhasil! Invoice: ${res.invoice}`);
             cart = [];
             renderCart();
-            loadProducts(document.getElementById('page-content')); // refresh stok
-          } else alert('Gagal');
-        };
+          } else alert('Gagal memproses penjualan');
+        });
       }
-      let productHtml = `<div class="row"><div class="col-md-5"><h3>Daftar Produk</h3><div class="list-group">`;
+      
+      let productHtml = `<div class="row"><div class="col-md-5"><h3>Daftar Produk</h3><div class="list-group" style="max-height: 70vh; overflow-y: auto;">`;
       products.forEach(p => {
         productHtml += `<button class="list-group-item list-group-item-action add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price_sell}" data-stock="${p.stock}">
-          <strong>${escapeHtml(p.name)}</strong><br><small>${formatRupiah(p.price_sell)} | Stok: ${p.stock}</small>
+          <strong>${escapeHtml(p.name)}</strong><br>
+          <small>${formatRupiah(p.price_sell)} | Stok: ${p.stock}</small>
         </button>`;
       });
-      productHtml += `</div></div><div class="col-md-7"><h3>Keranjang</h3><div id="cart-container"></div></div></div>`;
+      productHtml += `</div></div><div class="col-md-7"><h3>Keranjang Belanja</h3><div id="cart-container"></div></div></div>`;
       container.innerHTML = productHtml;
-      document.querySelectorAll('.add-to-cart').forEach(btn => btn.addEventListener('click', () => {
-        const id = btn.dataset.id;
-        const name = btn.dataset.name;
-        const price = parseFloat(btn.dataset.price);
-        const stock = parseInt(btn.dataset.stock);
-        const existing = cart.find(i => i.id == id);
-        if (existing) {
-          if (existing.qty + 1 <= stock) existing.qty++;
-          else alert('Stok tidak cukup');
-        } else {
-          if (1 <= stock) cart.push({ id, name, price_sell: price, qty: 1 });
-          else alert('Stok tidak cukup');
-        }
-        renderCart();
-      }));
+      
+      document.querySelectorAll('.add-to-cart').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.id;
+          const name = btn.dataset.name;
+          const price = parseFloat(btn.dataset.price);
+          const stock = parseInt(btn.dataset.stock);
+          const existing = cart.find(item => item.id == id);
+          if (existing) {
+            if (existing.qty + 1 <= stock) existing.qty++;
+            else alert('Stok tidak mencukupi');
+          } else {
+            if (1 <= stock) cart.push({ id, name, price_sell: price, qty: 1 });
+            else alert('Stok tidak mencukupi');
+          }
+          renderCart();
+        });
+      });
       renderCart();
     }
 
+    // ========== LAPORAN ==========
     async function loadReports(container) {
       const sales = await apiRequest('sales', 'GET');
-      let html = `<h2>Laporan Penjualan</h2><table id="reports-table" class="table"><thead><tr><th>Invoice</th><th>Tanggal</th><th>Pelanggan</th><th>Total</th><th>Metode</th></tr></thead><tbody>`;
+      let html = `<h2>Laporan Penjualan</h2>
+      <table id="reports-table" class="table table-striped">
+        <thead><tr><th>Invoice</th><th>Tanggal</th><th>Pelanggan</th><th>Total</th><th>Metode</th></tr></thead>
+        <tbody>`;
       sales.forEach(s => {
-        html += `<tr><td>${escapeHtml(s.invoice)}</td><td>${new Date(s.created_at).toLocaleString()}</td><td>${escapeHtml(s.customer_name)}</td><td>${formatRupiah(s.total)}</td><td>${escapeHtml(s.payment_method)}</td></tr>`;
+        html += `<tr>
+          <td>${escapeHtml(s.invoice)}</td>
+          <td>${new Date(s.created_at).toLocaleString()}</td>
+          <td>${escapeHtml(s.customer_name)}</td>
+          <td>${formatRupiah(s.total)}</td>
+          <td>${escapeHtml(s.payment_method)}</td>
+        </tr>`;
       });
       html += `</tbody></table>`;
       container.innerHTML = html;
       $('#reports-table').DataTable();
     }
 
-    function formatRupiah(angka) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(angka); }
-    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+    // ========== HELPER ==========
+    function formatRupiah(angka) {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(angka);
+    }
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
+    }
   </script>
 </body>
 </html>
