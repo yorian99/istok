@@ -1,490 +1,66 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem POS & Inventory Cloud</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .hidden-view { display: none !important; }
-        /* Scrollbar styling */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>POS System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-gray-100 h-screen font-sans overflow-hidden">
-
-    <!-- ================= LOADER ================= -->
-    <div id="global-loader" class="fixed inset-0 bg-white/80 z-50 flex flex-col justify-center items-center hidden-view">
-        <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600"></div>
-        <p class="mt-4 text-gray-700 font-semibold" id="loader-text">Memproses data...</p>
+<body>
+  <div id="app">
+    <!-- Login Form -->
+    <div id="login-container" class="container mt-5" style="max-width: 400px;">
+      <div class="card">
+        <div class="card-header">Login</div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label>Username</label>
+            <input type="text" id="username" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label>Password</label>
+            <input type="password" id="password" class="form-control">
+          </div>
+          <button class="btn btn-primary" id="btn-login">Login</button>
+          <div id="login-error" class="text-danger mt-2"></div>
+        </div>
+      </div>
     </div>
 
-    <!-- ================= HALAMAN LOGIN ================= -->
-    <div id="login-view" class="flex items-center justify-center h-screen bg-gradient-to-br from-blue-900 to-blue-600">
-        <div class="bg-white p-8 rounded-xl shadow-2xl w-96 max-w-full">
-            <div class="text-center mb-8">
-                <i class="fas fa-store text-4xl text-blue-600 mb-2"></i>
-                <h2 class="text-2xl font-bold text-gray-800">Sistem POS</h2>
-                <p class="text-gray-500 text-sm">Masuk ke akun Anda</p>
-            </div>
-            <form id="login-form" onsubmit="handleLogin(event)">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
-                    <input type="text" id="username" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500" required value="admin">
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
-                    <input type="password" id="password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500" required value="admin123">
-                </div>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
-                    Masuk
-                </button>
-            </form>
+    <!-- Main App (setelah login) -->
+    <div id="main-container" style="display:none;">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">POS System</a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+              <li class="nav-item"><a class="nav-link" href="#" data-page="dashboard">Dashboard</a></li>
+              <li class="nav-item"><a class="nav-link" href="#" data-page="products">Produk</a></li>
+              <li class="nav-item"><a class="nav-link" href="#" data-page="pos">Kasir</a></li>
+              <li class="nav-item"><a class="nav-link" href="#" data-page="reports">Laporan</a></li>
+            </ul>
+            <span class="navbar-text text-white me-3" id="user-info"></span>
+            <button class="btn btn-outline-light" id="logout">Logout</button>
+          </div>
         </div>
+      </nav>
+
+      <div class="container mt-4" id="page-content">
+        <!-- Konten dinamis di sini -->
+      </div>
     </div>
+  </div>
 
-    <!-- ================= APLIKASI UTAMA (DASHBOARD & POS) ================= -->
-    <div id="app-view" class="hidden-view flex h-screen">
-        
-        <!-- SIDEBAR -->
-        <div class="w-64 bg-gray-900 text-white flex flex-col transition-all duration-300">
-            <div class="p-5 flex items-center justify-center border-b border-gray-800">
-                <i class="fas fa-store text-2xl text-blue-400 mr-2"></i>
-                <span class="text-xl font-bold tracking-wider">POS Cloud</span>
-            </div>
-            
-            <div class="p-4 flex items-center gap-3 border-b border-gray-800">
-                <div class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center font-bold" id="user-initial">A</div>
-                <div>
-                    <p class="text-sm font-semibold" id="user-name">Admin User</p>
-                    <p class="text-xs text-gray-400" id="user-role">Super Admin</p>
-                </div>
-            </div>
-
-            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-                <a href="#" onclick="switchView('dashboard')" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition text-blue-400" id="nav-dashboard">
-                    <i class="fas fa-chart-line w-5"></i> Dashboard
-                </a>
-                <a href="#" onclick="switchView('pos')" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition" id="nav-pos">
-                    <i class="fas fa-cash-register w-5"></i> Kasir (POS)
-                </a>
-                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition text-gray-400" onclick="alert('Fitur Produk dalam pengembangan di UI ini')">
-                    <i class="fas fa-box w-5"></i> Produk
-                </a>
-                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition text-gray-400">
-                    <i class="fas fa-boxes w-5"></i> Stok Barang
-                </a>
-                <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 transition text-gray-400">
-                    <i class="fas fa-file-invoice w-5"></i> Laporan
-                </a>
-            </nav>
-            <div class="p-4 border-t border-gray-800">
-                <button onclick="logout()" class="flex items-center gap-3 p-3 rounded-lg hover:bg-red-600 hover:text-white transition w-full text-left text-gray-400">
-                    <i class="fas fa-sign-out-alt w-5"></i> Keluar
-                </button>
-            </div>
-        </div>
-
-        <!-- MAIN CONTENT AREA -->
-        <div class="flex-1 flex flex-col h-screen overflow-hidden">
-            
-            <!-- HEADER -->
-            <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 z-10">
-                <h1 class="text-xl font-semibold text-gray-800" id="page-title">Dashboard</h1>
-                <div class="flex items-center gap-4">
-                    <div class="relative">
-                        <i class="fas fa-bell text-gray-500 hover:text-blue-600 cursor-pointer text-xl"></i>
-                        <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">2</span>
-                    </div>
-                </div>
-            </header>
-
-            <!-- KONTEN: DASHBOARD -->
-            <main id="view-dashboard" class="flex-1 p-6 overflow-y-auto bg-gray-50">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
-                        <h3 class="text-gray-500 text-sm font-semibold mb-1">Penjualan Hari Ini</h3>
-                        <p class="text-2xl font-bold text-gray-800">Rp 2.450.000</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
-                        <h3 class="text-gray-500 text-sm font-semibold mb-1">Transaksi</h3>
-                        <p class="text-2xl font-bold text-gray-800">45</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-500">
-                        <h3 class="text-gray-500 text-sm font-semibold mb-1">Total Produk</h3>
-                        <p class="text-2xl font-bold text-gray-800" id="dash-total-product">0</p>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500">
-                        <h3 class="text-gray-500 text-sm font-semibold mb-1">Stok Menipis</h3>
-                        <p class="text-2xl font-bold text-gray-800">3</p>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl shadow-sm p-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">Grafik Penjualan Minggu Ini</h3>
-                    <canvas id="salesChart" height="80"></canvas>
-                </div>
-            </main>
-
-            <!-- KONTEN: KASIR (POS) -->
-            <main id="view-pos" class="hidden-view flex-1 flex h-full overflow-hidden">
-                <!-- Kiri: Daftar Produk -->
-                <div class="w-2/3 flex flex-col bg-gray-50 p-4">
-                    <div class="flex gap-4 mb-4">
-                        <div class="relative flex-1">
-                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
-                            <input type="text" id="search-product" placeholder="Cari nama barang atau scan barcode..." class="w-full pl-10 pr-4 py-2 rounded-lg border focus:ring-2 focus:ring-blue-500 outline-none">
-                        </div>
-                        <button onclick="loadProducts()" class="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-200">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                    </div>
-                    
-                    <!-- Grid Produk -->
-                    <div id="product-grid" class="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-1">
-                        <!-- Produk di-render disini -->
-                    </div>
-                </div>
-
-                <!-- Kanan: Keranjang Kasir -->
-                <div class="w-1/3 bg-white border-l shadow-xl flex flex-col">
-                    <div class="p-4 bg-gray-800 text-white flex justify-between items-center">
-                        <h2 class="font-bold text-lg"><i class="fas fa-shopping-cart mr-2"></i>Keranjang</h2>
-                        <button onclick="clearCart()" class="text-red-400 hover:text-red-300 text-sm"><i class="fas fa-trash"></i> Kosongkan</button>
-                    </div>
-                    
-                    <div id="cart-items" class="flex-1 overflow-y-auto p-4 space-y-3">
-                        <!-- Item keranjang -->
-                        <div class="text-center text-gray-400 mt-10" id="empty-cart-msg">
-                            <i class="fas fa-box-open text-4xl mb-2"></i><br>Keranjang masih kosong
-                        </div>
-                    </div>
-
-                    <div class="p-4 bg-gray-50 border-t">
-                        <div class="flex justify-between mb-2 text-sm text-gray-600">
-                            <span>Subtotal</span>
-                            <span id="cart-subtotal">Rp 0</span>
-                        </div>
-                        <div class="flex justify-between mb-2 text-sm text-gray-600">
-                            <span>Pajak (11%)</span>
-                            <span id="cart-tax">Rp 0</span>
-                        </div>
-                        <div class="flex justify-between mb-4 font-bold text-xl text-gray-800 border-t pt-2">
-                            <span>TOTAL</span>
-                            <span id="cart-total" class="text-blue-600">Rp 0</span>
-                        </div>
-                        <button onclick="processCheckout()" id="btn-checkout" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                            BAYAR SEKARANG
-                        </button>
-                    </div>
-                </div>
-            </main>
-
-        </div>
-    </div>
-
-    <!-- SCRIPT LOGIKA APLIKASI -->
-    <script>
-        /** * ==========================================
-         * KONFIGURASI URL BACKEND (GAS WEB APP)
-         * ==========================================
-         * MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
-         */
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbySgCDmrWal_vWNoH89tMVLLWSSF7M6ISZ67gMOZFj34WQUsJq5KhfqanZ6RXXhPSQd/exec";
-
-        // State Aplikasi
-        let currentUser = null;
-        let products = [];
-        let cart = [];
-
-        // Utilities
-        const formatRupiah = (angka) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka);
-        const showLoader = (text) => { document.getElementById('loader-text').innerText = text; document.getElementById('global-loader').classList.remove('hidden-view'); };
-        const hideLoader = () => document.getElementById('global-loader').classList.add('hidden-view');
-
-        // Fungsi Pemanggil API (Fetch ke GAS)
-        async function apiCall(action, payload = {}) {
-            // Karena tidak bisa connect asli tanpa URL valid, untuk DEMO kita MOCK response jika URL masih bawaan
-            if(GAS_API_URL.includes('GANTI_DENGAN_URL_ANDA')) {
-                return mockApiCall(action, payload);
-            }
-
-            try {
-                const response = await fetch(GAS_API_URL, {
-                    method: 'POST',
-                    // HAPUS mode: 'no-cors' agar aplikasi bisa membaca data JSON dari server
-                    headers: { 
-                        // Gunakan text/plain untuk bypass blokir CORS preflight di Google Apps Script
-                        'Content-Type': 'text/plain;charset=utf-8' 
-                    },
-                    body: JSON.stringify({ action, payload })
-                });
-                
-                // Sekarang kita bisa mem-parsing response asli dari GAS
-                const result = await response.json();
-                return result; 
-            } catch (error) {
-                console.error("API Error:", error);
-                alert("Koneksi ke server gagal. Pastikan URL GAS benar dan di-deploy dengan akses 'Siapa saja'.");
-                return { status: "error", message: error.message };
-            }
-        }
-
-        // Mock API untuk Demo UI Berjalan
-        function mockApiCall(action, payload) {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    if(action === 'login') {
-                        if(payload.username === 'admin' && payload.password === 'admin123') resolve({ status: 'success', data: { id: 'U-001', name: 'Admin Utama', role: 'Super Admin' } });
-                        else resolve({ status: 'error', message: 'Kredensial salah' });
-                    }
-                    if(action === 'getProducts') {
-                        resolve({ status: 'success', data: [
-                            { id: 'P-001', nama_barang: 'Kopi Arabica 100g', harga_jual: 25000, stok: 50, image_url: 'https://via.placeholder.com/150?text=Kopi' },
-                            { id: 'P-002', nama_barang: 'Susu UHT 1L', harga_jual: 18000, stok: 120, image_url: 'https://via.placeholder.com/150?text=Susu' },
-                            { id: 'P-003', nama_barang: 'Roti Gandum', harga_jual: 15000, stok: 15, image_url: 'https://via.placeholder.com/150?text=Roti' },
-                            { id: 'P-004', nama_barang: 'Air Mineral 600ml', harga_jual: 3500, stok: 300, image_url: 'https://via.placeholder.com/150?text=Air' },
-                            { id: 'P-005', nama_barang: 'Gula Pasir 1kg', harga_jual: 16000, stok: 80, image_url: 'https://via.placeholder.com/150?text=Gula' }
-                        ]});
-                    }
-                    if(action === 'checkout') {
-                        resolve({ status: 'success', data: { transaction_id: 'INV-' + Date.now() } });
-                    }
-                }, 800); // Simulasi delay internet
-            });
-        }
-
-        // ================= FITUR LOGIN =================
-        async function handleLogin(e) {
-            e.preventDefault();
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            
-            showLoader("Memeriksa kredensial...");
-            const res = await apiCall('login', { username: u, password: p });
-            hideLoader();
-
-            if(res.status === 'success') {
-                currentUser = res.data;
-                document.getElementById('user-name').innerText = currentUser.name;
-                document.getElementById('user-role').innerText = currentUser.role;
-                document.getElementById('user-initial').innerText = currentUser.name.charAt(0);
-                
-                document.getElementById('login-view').classList.add('hidden-view');
-                document.getElementById('app-view').classList.remove('hidden-view');
-                
-                initDashboard();
-            } else {
-                alert("Gagal Login: " + res.message);
-            }
-        }
-
-        function logout() {
-            currentUser = null;
-            document.getElementById('app-view').classList.add('hidden-view');
-            document.getElementById('login-view').classList.remove('hidden-view');
-            document.getElementById('password').value = "";
-        }
-
-        // ================= NAVIGASI =================
-        function switchView(viewName) {
-            document.getElementById('view-dashboard').classList.add('hidden-view');
-            document.getElementById('view-pos').classList.add('hidden-view');
-            
-            // Reset nav styles
-            document.getElementById('nav-dashboard').classList.remove('text-blue-400');
-            document.getElementById('nav-pos').classList.remove('text-blue-400');
-            
-            if(viewName === 'dashboard') {
-                document.getElementById('view-dashboard').classList.remove('hidden-view');
-                document.getElementById('page-title').innerText = "Dashboard";
-                document.getElementById('nav-dashboard').classList.add('text-blue-400');
-            } else if (viewName === 'pos') {
-                document.getElementById('view-pos').classList.remove('hidden-view');
-                document.getElementById('page-title').innerText = "Kasir (Point of Sale)";
-                document.getElementById('nav-pos').classList.add('text-blue-400');
-                if(products.length === 0) loadProducts();
-            }
-        }
-
-        // ================= DASHBOARD =================
-        function initDashboard() {
-            // Setup Chart.js
-            const ctx = document.getElementById('salesChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'],
-                    datasets: [{
-                        label: 'Pendapatan (Juta Rp)',
-                        data: [1.2, 1.9, 1.5, 2.1, 2.4, 3.5, 3.0],
-                        borderColor: 'rgb(37, 99, 235)',
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                        tension: 0.3,
-                        fill: true
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
-
-        // ================= KASIR (POS) =================
-        async function loadProducts() {
-            showLoader("Memuat Produk...");
-            const res = await apiCall('getProducts');
-            hideLoader();
-
-            if(res.status === 'success') {
-                products = res.data;
-                document.getElementById('dash-total-product').innerText = products.length;
-                renderProductGrid(products);
-            }
-        }
-
-        function renderProductGrid(items) {
-            const grid = document.getElementById('product-grid');
-            grid.innerHTML = '';
-            
-            items.forEach(p => {
-                const stockColor = p.stok > 20 ? 'text-green-600' : 'text-red-500';
-                grid.innerHTML += `
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-3 cursor-pointer hover:shadow-md transition hover:border-blue-300 flex flex-col" onclick="addToCart('${p.id}')">
-                        <img src="${p.image_url}" class="h-24 w-full object-cover rounded-lg mb-2" alt="${p.nama_barang}">
-                        <h4 class="font-semibold text-gray-800 text-sm line-clamp-2 leading-tight flex-1">${p.nama_barang}</h4>
-                        <div class="mt-2 flex justify-between items-end">
-                            <span class="text-blue-600 font-bold">${formatRupiah(p.harga_jual)}</span>
-                            <span class="text-xs ${stockColor} font-medium">Stok: ${p.stok}</span>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        // Pencarian Produk Realtime
-        document.getElementById('search-product').addEventListener('input', function(e) {
-            const keyword = e.target.value.toLowerCase();
-            const filtered = products.filter(p => p.nama_barang.toLowerCase().includes(keyword) || p.id.toLowerCase().includes(keyword));
-            renderProductGrid(filtered);
-        });
-
-        function addToCart(productId) {
-            const product = products.find(p => p.id === productId);
-            if(!product) return;
-            
-            if(product.stok <= 0) {
-                alert("Stok barang habis!"); return;
-            }
-
-            const existingItem = cart.find(item => item.id === productId);
-            if(existingItem) {
-                if(existingItem.qty >= product.stok) {
-                    alert("Jumlah melebihi stok yang ada!"); return;
-                }
-                existingItem.qty++;
-            } else {
-                cart.push({ ...product, qty: 1 });
-            }
-            updateCartUI();
-        }
-
-        function updateCartQty(productId, change) {
-            const index = cart.findIndex(item => item.id === productId);
-            if(index > -1) {
-                const product = products.find(p => p.id === productId);
-                cart[index].qty += change;
-                
-                if(cart[index].qty > product.stok) {
-                    cart[index].qty = product.stok;
-                    alert("Maksimal stok tercapai");
-                }
-                
-                if(cart[index].qty <= 0) cart.splice(index, 1);
-                updateCartUI();
-            }
-        }
-
-        function clearCart() {
-            if(confirm("Yakin ingin mengosongkan keranjang?")) {
-                cart = [];
-                updateCartUI();
-            }
-        }
-
-        function updateCartUI() {
-            const container = document.getElementById('cart-items');
-            const emptyMsg = document.getElementById('empty-cart-msg');
-            const btnCheckout = document.getElementById('btn-checkout');
-            
-            container.innerHTML = '';
-            let subtotal = 0;
-
-            if(cart.length === 0) {
-                container.appendChild(emptyMsg);
-                emptyMsg.style.display = 'block';
-                btnCheckout.disabled = true;
-            } else {
-                emptyMsg.style.display = 'none';
-                btnCheckout.disabled = false;
-                
-                cart.forEach(item => {
-                    const totalItem = item.harga_jual * item.qty;
-                    subtotal += totalItem;
-                    
-                    container.innerHTML += `
-                        <div class="bg-gray-50 border p-3 rounded-lg flex justify-between items-center">
-                            <div class="flex-1">
-                                <h5 class="text-sm font-bold text-gray-800">${item.nama_barang}</h5>
-                                <div class="text-xs text-blue-600">${formatRupiah(item.harga_jual)}</div>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button onclick="updateCartQty('${item.id}', -1)" class="w-7 h-7 bg-white border rounded shadow-sm text-gray-600 hover:bg-gray-100">-</button>
-                                <span class="w-6 text-center text-sm font-semibold">${item.qty}</span>
-                                <button onclick="updateCartQty('${item.id}', 1)" class="w-7 h-7 bg-white border rounded shadow-sm text-gray-600 hover:bg-gray-100">+</button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-
-            const tax = subtotal * 0.11; // PPN 11%
-            const total = subtotal + tax;
-
-            document.getElementById('cart-subtotal').innerText = formatRupiah(subtotal);
-            document.getElementById('cart-tax').innerText = formatRupiah(tax);
-            document.getElementById('cart-total').innerText = formatRupiah(total);
-        }
-
-        async function processCheckout() {
-            if(cart.length === 0) return;
-            
-            const totalStr = document.getElementById('cart-total').innerText;
-            const totalAngka = parseInt(totalStr.replace(/[^0-9]/g, ''));
-
-            const payload = {
-                user_id: currentUser.id,
-                cart: cart,
-                total: totalAngka,
-                metode_bayar: 'Cash' // Bisa dikembangkan dengan pop-up pilihan bayar
-            };
-
-            showLoader("Memproses Transaksi...");
-            const res = await apiCall('checkout', payload);
-            hideLoader();
-
-            if(res.status === 'success') {
-                alert(`Transaksi Berhasil!\nNo. Struk: ${res.data.transaction_id}`);
-                cart = [];
-                updateCartUI();
-                // Opsional: print struk disini
-            } else {
-                alert("Gagal memproses transaksi");
-            }
-        }
-
-    </script>
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
