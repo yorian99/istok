@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>KORWIL SINE E-PRESENSI </title>
-  <!-- Tailwind CSS + Font Inter -->
+  <title>KORWIL SINE E-PRESENSI</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -19,7 +17,6 @@
       align-items: center;
       justify-content: center;
     }
-    /* efek glassmorphism halus */
     .glass-card {
       background: rgba(255, 255, 255, 0.96);
       backdrop-filter: blur(2px);
@@ -31,28 +28,27 @@
       transform: translateY(-4px);
       box-shadow: 0 30px 50px -15px rgba(0, 0, 0, 0.25);
     }
-    .btn-download {
-      transition: all 0.25s ease;
-      background: #1e293b;
+    .nav-link {
+      transition: all 0.2s;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 0.5rem 1rem;
+      border-radius: 12px;
     }
-    .btn-download:hover {
-      background: #0f172a;
-      transform: scale(1.02);
-      box-shadow: 0 15px 25px -10px rgba(0, 0, 0, 0.3);
+    .nav-link:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+    .btn-action {
+      transition: all 0.25s ease;
+    }
+    .btn-action:hover {
+      transform: translateY(-2px);
     }
     .logo-circle {
       background: linear-gradient(145deg, #218380, #1a6b68);
       box-shadow: 0 15px 30px -10px rgba(33, 131, 128, 0.4);
-    }
-    .token-badge {
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-      color: #b45309;
-      font-weight: 700;
-      font-size: 0.7rem;
-      padding: 0.3rem 0.9rem;
-      border-radius: 40px;
-      letter-spacing: 0.3px;
     }
     @keyframes softPulse {
       0% { opacity: 0.7; transform: scale(0.98);}
@@ -63,11 +59,22 @@
     }
   </style>
 </head>
-<body class="p-5 flex items-center justify-center">
+<body class="p-5">
   <div class="w-full max-w-4xl mx-auto">
-    <!-- Kartu utama unduhan + logo -->
+    
+    <nav class="flex justify-center gap-2 mb-6 bg-white/50 backdrop-blur-md p-2 rounded-2xl border border-white/20 shadow-sm w-fit mx-auto">
+        <a href="index.html" class="nav-link flex items-center gap-2 bg-white shadow-sm text-teal-700">
+            <i data-lucide="home" style="width: 16px;"></i> Home
+        </a>
+        <a href="beranda.html" class="nav-link flex items-center gap-2">
+            <i data-lucide="layout-dashboard" style="width: 16px;"></i> Beranda
+        </a>
+        <a href="kontak.html" class="nav-link flex items-center gap-2">
+            <i data-lucide="phone" style="width: 16px;"></i> Kontak
+        </a>
+    </nav>
+
     <div class="glass-card overflow-hidden w-full">
-      <!-- area header / dekorasi -->
       <div class="bg-white/50 px-6 pt-8 pb-2 border-b border-slate-100 flex justify-between items-center flex-wrap gap-3">
         <div class="flex items-center gap-3">
           <div class="bg-teal-50 p-2 rounded-xl">
@@ -75,101 +82,65 @@
           </div>
           <span class="text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-3 py-1 rounded-full">KORWIL PENDIDIKAN KEC. SINE</span>
         </div>
-        <div class="token-badge flex items-center gap-1">
-          <i data-lucide="shield-check" style="width: 14px; height: 14px;"></i>
-          <span>Resmi | E-Presensi Terintegrasi</span>
+        <div class="bg-amber-50 border border-amber-200 text-amber-700 font-bold text-[10px] px-3 py-1 rounded-full flex items-center gap-1 uppercase tracking-tighter">
+          <i data-lucide="shield-check" style="width: 14px;"></i>
+          Resmi | E-Presensi
         </div>
       </div>
 
-      <!-- KONTEN UTAMA: LOGO + UNDUHAN -->
       <div class="p-8 md:p-12 flex flex-col items-center text-center">
-        <!-- Tempat Logo (area utama) -->
         <div class="logo-circle w-32 h-32 md:w-40 md:h-40 rounded-full flex items-center justify-center mb-6 pulse-soft">
-          <!-- Ikon utama sebagai logo dinamis (mewakili identitas Korwil Sine) -->
           <i data-lucide="smartphone" class="text-white" style="width: 70px; height: 70px; stroke-width: 1.5;"></i>
         </div>
         
-        <!-- Nama lembaga & e-presensi -->
         <h1 class="text-3xl md:text-4xl font-black tracking-tight text-slate-800">
           KORWIL SINE <span class="text-teal-700">E-PRESENSI</span>
         </h1>
-        <div class="flex items-center gap-2 mt-2 mb-4">
-          <i data-lucide="badge-check" class="text-emerald-600" style="width: 18px; height: 18px;"></i>
-          <p class="text-slate-500 text-sm font-medium">Aplikasi resmi kehadiran & manajemen peserta</p>
-        </div>
+        <p class="text-slate-500 text-sm font-medium mt-2">Aplikasi manajemen kehadiran tenaga pendidik</p>
         
-        <!-- deskripsi singkat -->
-        <div class="max-w-md mx-auto mt-2 mb-6">
-          <p class="text-slate-600 text-sm leading-relaxed">
-            Unduh aplikasi <span class="font-bold text-slate-800">E-Presensi Korwil Sine</span> untuk melakukan presensi digital, melihat jadwal, serta menerima informasi terkini seputar kegiatan pendidikan di Kecamatan Sine.
-          </p>
-        </div>
-        
-        <!-- info versi / ukuran (opsional) -->
-        <div class="flex flex-wrap justify-center gap-4 text-xs text-slate-400 mb-8">
-          <div class="flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-full">
-            <i data-lucide="package" style="width: 12px; height: 12px;"></i>
-            <span>Versi terbaru 2.0.1</span>
-          </div>
-          <div class="flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-full">
-            <i data-lucide="hard-drive" style="width: 12px; height: 12px;"></i>
-            <span>~28 MB</span>
-          </div>
-          <div class="flex items-center gap-1 bg-slate-100 px-3 py-1.5 rounded-full">
-            <i data-lucide="shield" style="width: 12px; height: 12px;"></i>
-            <span>Android 7.0+</span>
-          </div>
+        <div class="mt-8 mb-4 w-full flex flex-col items-center gap-4">
+            <a href="https://github.com/yorian99/yor/raw/refs/heads/main/base.apk" 
+               download 
+               class="btn-action inline-flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 px-10 rounded-2xl shadow-xl transition-all duration-200 group w-full sm:w-auto text-base">
+              <i data-lucide="download-cloud" class="group-hover:animate-bounce" style="width: 22px; height: 22px;"></i>
+              <span>UNDUH APK SEKARANG</span>
+            </a>
+
+            <div class="flex flex-wrap justify-center gap-3">
+                <a href="beranda.html" class="btn-action flex items-center gap-2 bg-white border border-slate-200 px-5 py-3 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 shadow-sm">
+                    <i data-lucide="book-open" class="text-teal-600" style="width: 18px;"></i> Panduan
+                </a>
+                <a href="#" class="btn-action flex items-center gap-2 bg-white border border-slate-200 px-5 py-3 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 shadow-sm">
+                    <i data-lucide="info" class="text-blue-600" style="width: 18px;"></i> Cek Status
+                </a>
+            </div>
         </div>
 
-        <!-- TOMBOL UNDUH APLIKASI (link utama) -->
-        <a href="https://github.com/yorian99/yor/raw/refs/heads/main/base.apk" 
-           download 
-           class="btn-download inline-flex items-center justify-center gap-3 bg-slate-800 hover:bg-slate-900 text-white font-bold py-4 px-8 rounded-2xl shadow-xl transition-all duration-200 group w-full sm:w-auto text-base">
-          <i data-lucide="download-cloud" class="group-hover:animate-bounce" style="width: 22px; height: 22px;"></i>
-          <span>UNDUH APLIKASI E-PRESENSI</span>
-          <i data-lucide="arrow-right" style="width: 18px; height: 18px;"></i>
-        </a>
+        <div class="flex flex-wrap justify-center gap-3 text-[10px] text-slate-400 mt-6">
+          <span class="bg-slate-100 px-3 py-1 rounded-md italic font-medium">Versi 2.0.1 (Stable)</span>
+          <span class="bg-slate-100 px-3 py-1 rounded-md italic font-medium">Size: 28MB</span>
+        </div>
 
-        <!-- informasi keamanan & catatan -->
-        <div class="mt-8 text-[11px] text-slate-400 border-t border-slate-100 pt-6 flex flex-wrap justify-center gap-x-6 gap-y-2">
-          <span class="flex items-center gap-1"><i data-lucide="lock" style="width: 12px;"></i> Unduhan aman & resmi</span>
-          <span class="flex items-center gap-1"><i data-lucide="qr-code" style="width: 12px;"></i> Support instalasi manual (.apk)</span>
-          <span class="flex items-center gap-1"><i data-lucide="clock" style="width: 12px;"></i> Update berkala via korwil</span>
+        <div class="mt-10 text-[11px] text-slate-400 border-t border-slate-100 pt-6 flex flex-wrap justify-center gap-x-6 gap-y-2">
+          <span class="flex items-center gap-1"><i data-lucide="lock" style="width: 12px;"></i> Enkripsi SSL Aman</span>
+          <span class="flex items-center gap-1"><i data-lucide="database" style="width: 12px;"></i> Real-time Database</span>
         </div>
       </div>
 
-      <!-- footer ringan -->
-      <div class="bg-slate-50/80 px-6 py-4 rounded-b-2xl text-center text-[10px] text-slate-400 font-medium tracking-wider border-t border-slate-100 flex justify-between items-center flex-wrap gap-2">
-        <span>© 2026 KORWIL PENDIDIKAN KECAMATAN SINE</span>
-        <span>● SISTEM E-PRESENSI DIGITAL ●</span>
-      </div>
-    </div>
-    
-    <!-- Pesan tambahan / petunjuk (logo sudah terlihat jelas) -->
-    <div class="text-center mt-8 text-[11px] text-slate-500 flex justify-center gap-5 flex-wrap">
-      <div class="flex items-center gap-1 bg-white/70 backdrop-blur-sm rounded-full px-3 py-1 shadow-sm">
-        <i data-lucide="smartphone" style="width: 12px;"></i>
-        <span>Izinkan instalasi dari sumber tidak dikenal (Pengaturan → Keamanan)</span>
+      <div class="bg-slate-50/80 px-6 py-4 text-center text-[10px] text-slate-400 font-bold tracking-widest flex justify-between items-center border-t border-slate-100">
+        <span>© 2026 KORWIL SINE</span>
+        <div class="flex gap-2">
+            <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span>SERVER ONLINE</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- inisialisasi icon lucide -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      if (typeof lucide !== 'undefined' && lucide.createIcons) {
-        lucide.createIcons();
-      } else {
-        // fallback jika lucide belum siap
-        window.addEventListener('load', function() {
-          if (window.lucide) window.lucide.createIcons();
-        });
-      }
+      lucide.createIcons();
     });
-    // opsional: pastikan semua icon terganti setelah dynamic (meski statis)
-    setTimeout(() => {
-      if (window.lucide) window.lucide.createIcons();
-    }, 100);
   </script>
 </body>
 </html>
